@@ -10,10 +10,13 @@ _Last updated: 2026-05-30._
 
 ## Open questions (need a decision)
 
-- [ ] **OpenAI Responses signature replay** — Does the Responses API require replaying
-  signatures on text/reasoning items for multi-turn correctness? Decides whether
-  `textSignature` is strictly v1 or just defensive. echo hits Responses via *both* `OpenAI`
-  and `OpenAiChatGpt`. → verify against current Responses docs. _(design.md Q1; tasks.md 1.3)_
+- [x] **OpenAI Responses signature replay** — **Resolved (2026-05-30).** Stateless Responses
+  (`store: false` / ZDR) *must* retain and replay reasoning items across turns; when a turn
+  contains a tool call, `encrypted_content` is required (`id`/`summary` alone insufficient).
+  Since echo hits Responses via both `openai-responses` and `openai-codex-responses`, supports
+  tools, and replays context client-side (no `previous_response_id`), thinking-signature replay
+  is **load-bearing in v1, not defensive**. Recorded in `spec/api.md` (Signatures section).
+  _(design.md Q1; tasks.md 1.3)_
 - [ ] **Generated model-registry source** — Vendored snapshot vs a live fetch step for the
   `MODELS` pricing/limits table? What regeneration cadence? _(design.md Q2; tasks.md 1.8)_
 - [ ] **Primary v1 runtime: dev laptop vs deployed daemon** — Shapes the deferred sops design

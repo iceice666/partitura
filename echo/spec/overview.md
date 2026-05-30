@@ -77,6 +77,5 @@ One codebase, two shapes:
 
 ## Status
 
-The current on-disk skeleton is still the **OCaml/dune** scaffold from before this spec change.
-Rescaffolding to a Rust Cargo workspace (crate `echo` + `echo` CLI) is the first
-implementation task — see `CLAUDE.md`.
+Specs are complete. The Rust Cargo rescaffold (`crates/core` + `crates/cli`, deleting any
+residual OCaml/dune files) is the first implementation task — see `CLAUDE.md` and `BACKLOG.md`.

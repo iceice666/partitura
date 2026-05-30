@@ -28,7 +28,9 @@ echo run --model anthropic/claude-opus-4-8 < context.json
 // stdout (score.echo-event/v1)
 { "schema": "score.echo-event/v1", "t": "text_delta", "content_index": 0, "delta": "He" }
 { "schema": "score.echo-event/v1", "t": "text_delta", "content_index": 0, "delta": "llo" }
-{ "schema": "score.echo-event/v1", "t": "done", "reason": "stop", "usage": { "input": 12, "output": 3 } }
+{ "schema": "score.echo-event/v1", "t": "done", "reason": "stop",
+  "usage": { "input": 12, "output": 3, "cacheRead": 0, "cacheWrite": 0, "totalTokens": 15,
+             "cost": { "input": 0.000036, "output": 0.000015, "cacheRead": 0, "cacheWrite": 0, "total": 0.000051 } } }
 ```
 
 `--json` / `--complete` collects the stream and prints the final `Assistant` message as a
