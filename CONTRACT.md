@@ -225,15 +225,27 @@ reset to base. See [`harmony/spec/verify-loop.md`](harmony/spec/verify-loop.md).
 - a **thin `echo` CLI** (one-shot `Context` JSON in → `score.echo-event/v1` JSONL out, plus a
   REPL for interactive testing) for humans and any non-Rust caller.
 
-The interface follows the `pi-ai` shape. Core types:
+The interface follows the `pi-ai` 0.78 shape (pi-ai's camelCase field names; the Rust crate maps
+them to snake_case — full surface in `echo/spec/api.md`). Core types:
 
-- `Context { system_prompt, messages: Message[], tools: Tool[] }`
-- `Message` — tagged union `User | Assistant | ToolResult`; content blocks `text | thinking |
-  image | tool_call`
-- `Model { provider, id, … }`; `complete(model, ctx, opts) -> Assistant` and
-  `stream(model, ctx, opts) -> events`
-- event union: `text_*` · `thinking_*` · `toolcall_*` · `done` · `error`, each carrying a
-  `partial` message and a `content_index`
+- `Context { system_prompt?, messages: Message[], tools: Tool[] }` — `tools` are opaque schemas.
+- `Message` — tagged union `User | Assistant | ToolResult`; content is typed blocks `text |
+  thinking | image | tool_call`, each addressable by a `content_index`. `text`, `thinking`, and
+  `tool_call` each carry an optional opaque **signature**, preserved verbatim and replayed on the
+  next request so a multi-turn context stays valid across providers; `thinking` also carries a
+  separate `redacted` flag. `image` is a URL **or** inline bytes.
+- The `Assistant` message carries **provenance** — `api`, `provider`, `model`, `responseId?`,
+  `usage`, `stop_reason`, `error_message?`, `timestamp` — so a context can move between models.
+- `Model { api, provider, id, … }` — two axes: `api` (wire protocol) keys the adapter, `provider`
+  is the auth/brand domain (see `echo/spec/providers.md`). `complete(model, ctx, opts) ->
+  Assistant` and `stream(model, ctx, opts) -> events`.
+- event union: `start` · `text_*` · `thinking_*` · `toolcall_*` · `done` · `error`, each carrying
+  the `partial` message and (for block events) a `content_index`; the stream ends with exactly one
+  terminal `done`/`error`. The CLI's `score.echo-event/v1` JSONL serialisation must stay
+  **faithful to this Rust event union** when echo is implemented.
+- `Usage { input, output, cacheRead, cacheWrite, totalTokens, cost{input, output, cacheRead,
+  cacheWrite, total} }` — cost computed from model pricing; `cacheWrite` is priced distinctly from
+  `cacheRead`.
 
 echo owns provider abstraction, auth, streaming, retries, and usage/cost — **not** tools or
 MCP. It receives `tools` as schemas and emits `tool_call` events; Voice runs the tools and
