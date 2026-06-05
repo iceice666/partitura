@@ -38,6 +38,8 @@
               erlang
               elixir
               elixir-ls          # LSP for editors
+              rebar3             # compiles Erlang deps pulled in by mix
+              openssl.dev        # needed by Erlang crypto / Phoenix TLS
             ]);
             # Hex + Rebar are fetched by mix; point them at a writable cache.
             MIX_HOME = "${builtins.getEnv "HOME"}/.mix";
