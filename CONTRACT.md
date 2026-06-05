@@ -60,6 +60,19 @@ Valid `status` values: `pitched` · `specced` · `ready` · `building` · `revie
 `awaiting_input` · `done` · `blocked` · `archived`. `awaiting_input` is a human-pending state
 (a run paused with questions); see [`harmony/spec/state-model.md`](harmony/spec/state-model.md).
 
+Selected `spec` sub-fields used by Harmony and Voice at runtime:
+
+| Field | Written by | Read by | Purpose |
+|-------|-----------|---------|---------|
+| `spec.rework_notes` | Harmony (from verifier report) | Voice (context) | Carry verifier feedback into the next executor run |
+| `spec.respec_notes` | Harmony (from infeasible report) | Human + Voice | Analysis from an infeasible return; signals spec reshaping needed |
+| `spec.clarifications` | Harmony (from `run:needs_input` answers) | Voice (context) | Human answers folded into the next run's first user message |
+| `spec.handoff_notes` | Harmony (from run report `handoff` field) | Voice (context) | Digest from the previous run so the next dispatch resumes knowledge |
+
+`spec.handoff_notes` is written by Harmony from the run report's optional `handoff` digest field
+and folded into the next dispatch's context alongside `spec.rework_notes` and `spec.clarifications`.
+Voice does **not** write ticket YAML; it only writes the `handoff` field into the run report.
+
 ---
 
 ## Harmony ↔ Aria protocol
@@ -133,6 +146,7 @@ Canonical schema version: `score.role-manifest/v1`.
 {
   "schema": "score.role-manifest/v1",
   "role": "builder",
+  "dispatch_mode": "independent",
   "system_prompt": "<base system prompt, global>",
   "skill": { "name": "spec", "body": "<SKILL.md body, frontmatter stripped>" },
   "model": { "provider": "anthropic", "id": "claude-opus-4-8" },
@@ -145,6 +159,10 @@ Canonical schema version: `score.role-manifest/v1`.
   "budgets": { "max_turns": 60, "max_tokens": 2000000, "max_seconds": 3600 }
 }
 ```
+
+`dispatch_mode` is optional and defaults to `independent`. Harmony sets `verify-loop` for
+verifier and in-loop rework dispatches so Voice preserves `score/<ticket-id>` at its current tip
+instead of resetting it to base.
 
 Voice assembles the model `Context` (see "Voice ↔ echo") from `system_prompt` + `skill.body`
 + the repo's `AGENTS.md`/`CLAUDE.md` + the ticket request (`spec.*`, `pitch`, `notes`). It
@@ -196,6 +214,11 @@ and `4`; best-effort (partial) for `1` and `5`; optional for `2`.
 `exit_reason: infeasible` must carry an `infeasibility` object.
 
 Minimum fields: `run_id`, `ticket_id`, `role`, `model`, `exit_reason`, `started_at`, `finished_at`.
+
+An optional `handoff` field MAY carry a plain-text digest produced by Voice's summarize-state
+routine. Harmony reads this field from the report and persists it to the ticket's `spec.handoff_notes`
+field before the next dispatch, so the next run's context carries forward what was learned.
+Voice writes `handoff`; Harmony persists it to the ticket — Voice never mutates ticket YAML.
 
 ### Worktree invariant
 

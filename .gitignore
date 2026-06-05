@@ -1,2 +1,4 @@
 .direnv
 .env
+# Voice workspace git worktrees — kept local, not committed
+.score/workspaces/
