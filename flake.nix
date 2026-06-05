@@ -41,9 +41,8 @@
               rebar3             # compiles Erlang deps pulled in by mix
               openssl.dev        # needed by Erlang crypto / Phoenix TLS
             ]);
-            # Hex + Rebar are fetched by mix; point them at a writable cache.
-            MIX_HOME = "${builtins.getEnv "HOME"}/.mix";
             shellHook = ''
+              export MIX_HOME="$HOME/.mix"
               echo "harmony — $(elixir --version | head -1)"
             '';
           };

@@ -1,1 +1,22 @@
-.direnv
+# Mix build artifacts
+/_build/
+/deps/
+/doc/
+/.fetch
+
+# Test coverage
+/cover/
+
+# Release artifacts
+/rel/
+
+# Runtime artifacts — not part of source
+/tmp/
+*.sock
+harmony.sock
+
+# Environment
+/.env
+
+# direnv
+/.direnv/

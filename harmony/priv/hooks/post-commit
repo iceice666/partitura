@@ -1,0 +1,3 @@
+#!/bin/sh
+# post-commit hook installed by `harmony register` — do not remove
+harmony notify --repo="$(pwd)" --commit="$(git rev-parse HEAD)"

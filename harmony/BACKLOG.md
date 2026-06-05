@@ -9,11 +9,12 @@ _Last updated: 2026-05-30._
 
 ## Open questions (need a decision)
 
-- [ ] **`max_verify_cycles` default** — the cycle bound for the executor↔verifier loop, shared in
+- [x] **`max_verify_cycles` default** — the cycle bound for the executor↔verifier loop, shared in
   spirit with Voice's chunked-progress convergence bound. Pick a default + config key.
-  _(spec/verify-loop.md)_
-- [ ] **Verify-loop opt-in shape** — the `.score/config.yaml` project key and per-ticket override
+  _Resolved in `implement-harmony-daemon`: config key `max_verify_cycles`, default `3`._
+- [x] **Verify-loop opt-in shape** — the `.score/config.yaml` project key and per-ticket override
   that turns the loop on/off. _(spec/verify-loop.md)_
+  _Resolved in `implement-harmony-daemon`: project `verify_loop: true`, ticket `verify: true|false` override._
 - [ ] **Verifier verdict production mechanism** — how the verifier agent emits the structured
   verdict so Voice captures it in the run report (dedicated tool, skill convention, or structured
   final output). Voice-side; cross-ref `../voice/spec/report.md`.
