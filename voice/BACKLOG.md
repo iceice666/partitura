@@ -10,8 +10,7 @@ _Last updated: 2026-05-30._
 
 ## Open questions (need a decision)
 
-- [ ] **Tool-result size cap** — the byte cap that bounds a single tool result before truncation
-  (shared with compaction). Pick a value + truncation marker shape. _(spec/mcp-bridge.md)_
+- [x] **Tool-result size cap** — resolved: 64 KiB (65536 bytes), head-retain + `[truncated N bytes]` marker on UTF-8 char boundary. _(implemented in voice-core/src/mcp/mod.rs; spec/mcp-bridge.md)_
 - [ ] **Convergence / cycle bound** — one max-dispatch knob should bound *both* handoff-driven
   chunked progress *and* the Harmony-orchestrated executor↔verifier loop, so neither runs
   forever. A Harmony state-machine concern. _(spec/failure-contract.md; harmony state model)_
@@ -29,9 +28,8 @@ _Last updated: 2026-05-30._
 
 ## Pending CONTRACT.md edits (before implementation)
 
-- [ ] **`handoff` digest field** in the run report (`score.run-report/v1`).
-- [ ] **`spec.handoff_notes` ticket field** — written by Harmony from the report, folded into the
-  next dispatch's context. _(spec/failure-contract.md)_
+- [x] **`handoff` digest field** in the run report (`score.run-report/v1`). _(added to CONTRACT.md and voice/spec/report.md)_
+- [x] **`spec.handoff_notes` ticket field** — documented in CONTRACT.md. _(spec/failure-contract.md)_
 
 ## Watch-outs / invariants
 

@@ -1,15 +1,28 @@
-## ADDED Requirements
+# voice-roles-context
+
+## Purpose
+
+Governs how Voice consumes the role manifest and constructs the `echo::Context` for each run:
+manifest parsing, system-content assembly order, ticket-request rendering, the harness addendum,
+and model passthrough.
+
+## Requirements
 
 ### Requirement: Role manifest consumption
 
 Voice SHALL read `VOICE_ROLE_MANIFEST` as a `score.role-manifest/v1` JSON document and consume
-its `role`, `system_prompt`, `skill`, `model`, `tools` (`mcp_servers`, `allow`), and `budgets`.
+its `role`, optional `dispatch_mode`, `system_prompt`, `skill`, `model`, `tools`
+(`mcp_servers`, `allow`), and `budgets`.
 Voice SHALL NOT re-resolve the global/repo layering — Harmony has already merged them, repo
 winning. A manifest that is missing or not valid `score.role-manifest/v1` SHALL cause exit `2`.
 
 #### Scenario: Manifest parsed
 - **WHEN** the manifest is valid `score.role-manifest/v1`
-- **THEN** Voice extracts role, system prompt, skill body, model, MCP servers, allow list, and budgets
+- **THEN** Voice extracts role, dispatch mode, system prompt, skill body, model, MCP servers, allow list, and budgets
+
+#### Scenario: Dispatch mode defaults
+- **WHEN** the manifest omits `dispatch_mode`
+- **THEN** Voice treats it as `independent`
 
 #### Scenario: Invalid manifest aborts
 - **WHEN** the manifest is absent or fails to parse as `score.role-manifest/v1`

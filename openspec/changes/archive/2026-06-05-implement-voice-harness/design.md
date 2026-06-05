@@ -200,13 +200,12 @@ This is greenfield (no running system to migrate), so "migration" is **build seq
 Rollback is trivial (new crates; deleting them removes the feature). The `CONTRACT.md` `handoff`
 field is additive and optional, so it does not break existing readers.
 
-## Open Questions
+## Decisions
 
-- **Base-reset vs branch-at-tip signalling.** `CONTRACT.md`'s verify-loop exception says in-loop
-  dispatches operate on `score/<ticket-id>` at its current tip rather than resetting to base, but
-  the five `VOICE_*` env vars don't tell Voice which mode it is in. **How is Voice told?** (new
-  env var, manifest field, or Harmony pre-positions the worktree and Voice never resets) — needs a
-  contract decision with Harmony before the workspace module's reset logic is final.
+- **Base-reset vs branch-at-tip signalling.** Voice reads the optional
+  `dispatch_mode` field from `score.role-manifest/v1`. The default `independent`
+  mode resets `score/<ticket-id>` to base. `verify-loop` preserves the branch at
+  its current tip for verifier and in-loop rework dispatches.
 - **Verifier `verdict` production.** `spec/report.md` leaves *how* a verifier emits the structured
   `verdict` open (dedicated tool vs skill-output convention vs structured final output), settled
   with Harmony's state machine. v1 Voice can serialise a `verdict` if present; the production

@@ -10,7 +10,8 @@ state left by a prior run; progress is carried forward only through ticket conte
 **Verify-loop exception:** a dispatch inside the executor↔verifier loop (the verifier, and the
 rework executor within the loop) SHALL operate on `score/<ticket-id>` **at its current tip, not a
 base reset**, per CONTRACT.md's verify-loop exception, so the verifier sees the executor's commits.
-How Voice is told which mode applies is unresolved (see design.md Open Questions).
+Voice SHALL select this behavior from the role manifest's optional `dispatch_mode` field:
+`independent` (default) resets to base, while `verify-loop` preserves the branch tip.
 
 #### Scenario: Initial dispatch creates a clean worktree
 - **WHEN** Voice starts and no worktree exists at `VOICE_WORKSPACE`
@@ -27,6 +28,12 @@ How Voice is told which mode applies is unresolved (see design.md Open Questions
 #### Scenario: Verify-loop dispatch is not reset to base
 - **WHEN** the dispatch is a verifier or in-loop rework run on `score/<ticket-id>`
 - **THEN** Voice operates on the branch at its current tip rather than resetting to base, so the executor's commits remain visible
+
+#### Scenario: Manifest controls dispatch mode
+- **WHEN** the role manifest omits `dispatch_mode`
+- **THEN** Voice treats the run as `independent`
+- **AND WHEN** the role manifest sets `dispatch_mode` to `verify-loop`
+- **THEN** Voice preserves the existing `score/<ticket-id>` branch tip
 
 ### Requirement: CWD-pin invariant
 

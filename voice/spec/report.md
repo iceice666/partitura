@@ -73,6 +73,7 @@ Written as JSON. All top-level fields except `notes`, `evidence`,
 | `token_usage` | object | yes | `input`, `output`, `cache_read` — summed from echo `Usage` |
 | `files_changed` | array | yes | One entry per modified file: `path`, `additions`, `deletions` |
 | `acceptance_results` | array | no | One entry per `spec.acceptance.automated` command |
+| `handoff` | string | no | Digest from the summarize-state routine; present on exit `1` failure runs. Harmony persists this to `spec.handoff_notes` for the next dispatch. |
 | `notes` | string | no | Free-text summary from the CLI's final output |
 | `evidence` | array | no | Paths to files written to the runs directory |
 
@@ -171,6 +172,25 @@ re-dispatch the executor). The verifier does **not** replace Voice's mechanical
 **Open:** how the agent *produces* the verdict (a dedicated tool, a skill output convention, or
 structured final output) and the execute→verify loop itself are settled with Harmony's state
 machine (`harmony/spec/state-model.md`), not here.
+
+---
+
+## Handoff digest (exit `1` failure exits)
+
+When Voice exits `1` (failure — budget exhausted, provider error, MCP server died, or context
+overflow surviving compaction), the report carries an optional `handoff` string produced by the
+summarize-state routine. The digest captures what is done, what state the work was in, key
+decisions, and what remains.
+
+Harmony reads this field and writes it to `spec.handoff_notes` on the ticket before the next
+dispatch. The next Voice process folds `spec.handoff_notes` into its first user message so it
+can resume knowledge without on-disk state.
+
+Voice does **not** write ticket YAML — only the report's `handoff` field. The ticket mutation
+is Harmony's responsibility.
+
+The digest is produced by an LLM call when the provider is healthy, or falls back to a mechanical
+digest (committed diff + turn count + last few context messages) when the provider itself failed.
 
 ---
 

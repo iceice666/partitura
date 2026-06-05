@@ -1,0 +1,26 @@
+[workspace]
+members = [
+    "crates/core",
+    "crates/voice",
+]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/iceice666/partitura"
+
+[workspace.dependencies]
+echo = { path = "../echo/crates/core" }
+rmcp = { version = "1.7", default-features = false, features = ["client", "transport-child-process"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+thiserror = "1"
+futures = "0.3"
+async-stream = "0.3"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+process-wrap = { version = "9.1", features = ["tokio1", "kill-on-drop", "process-group"] }

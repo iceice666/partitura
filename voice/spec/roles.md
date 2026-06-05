@@ -19,6 +19,7 @@ and the global/repo resolution rules are canonical in
 {
   "schema": "score.role-manifest/v1",
   "role": "builder",
+  "dispatch_mode": "independent",
   "system_prompt": "<base, global>",
   "skill": { "name": "spec", "body": "<SKILL.md body, frontmatter stripped>" },
   "model": { "provider": "anthropic", "id": "claude-opus-4-8" },
@@ -26,6 +27,10 @@ and the global/repo resolution rules are canonical in
   "budgets": { "max_turns": 60, "max_tokens": 2000000, "max_seconds": 3600 }
 }
 ```
+
+`dispatch_mode` is optional and defaults to `independent`. Harmony sets `verify-loop` only for
+verifier and in-loop rework dispatches; Voice uses that value to preserve the current
+`score/<ticket-id>` tip instead of resetting the branch to base.
 
 Harmony has already merged **global** (its role catalog + `harmony/skills/`) with **repo**
 overrides (`<project>/.score/`), repo winning. Voice does **not** re-resolve that layering.

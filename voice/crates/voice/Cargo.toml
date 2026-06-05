@@ -1,0 +1,18 @@
+[package]
+name = "voice"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "voice"
+path = "src/main.rs"
+
+[dependencies]
+voice-core = { path = "../core" }
+echo.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+chrono.workspace = true
