@@ -63,7 +63,7 @@ color         = true
 OAuth providers keep their tokens here (created `chmod 600`):
 
 ```
-~/.config/echo/tokens/<provider>.json   # access + refresh token, expiry
+~/.config/echo/tokens/<provider>.json   # id + access + refresh token, expiry, last refresh
 ```
 
 This store is **echo-owned, rotating runtime state**, not a static deployed secret. echo writes
@@ -75,6 +75,49 @@ handles API keys — that tooling would fight echo's own rotation.
 `echo login <provider>` writes it; `echo logout <provider>` removes it. Tokens are never logged
 or printed by `echo config show`.
 
+For `openai-chatgpt`, the token JSON SHALL retain:
+
+```json
+{
+  "idToken": "<jwt>",
+  "accessToken": "<bearer>",
+  "refreshToken": "<rotating refresh token>",
+  "expiresAt": 1770000000,
+  "lastRefresh": "2026-06-05T05:00:00Z"
+}
+```
+
+`idToken` is stored because the Codex-compatible ChatGPT OAuth path uses JWT claims for
+account/plan/workspace metadata and may use the ID token in token-exchange flows. `expiresAt` is
+derived from the access-token JWT `exp` claim when present; otherwise echo SHALL conservatively
+refresh before use. Refresh rewrites the file with `chmod 600`; a refresh response may rotate any
+of `idToken`, `accessToken`, or `refreshToken`, and echo SHALL preserve prior values for omitted
+fields.
+
+### OpenAiChatGpt OAuth endpoints
+
+`openai-chatgpt` uses the Codex-compatible ChatGPT OAuth flow:
+
+| Field | Value |
+|-------|-------|
+| issuer | `https://auth.openai.com` |
+| client id | `app_EMoamEEZ73f0CkXaXp7hrann` |
+| authorize | `{issuer}/oauth/authorize` |
+| token / refresh | `{issuer}/oauth/token` |
+| revoke | `{issuer}/oauth/revoke` |
+| loopback callback | `http://localhost:1455/auth/callback`, fallback `1457` |
+| scope | `openid profile email offline_access api.connectors.read api.connectors.invoke` |
+
+The authorize URL SHALL include PKCE `S256`, a random `state`, `id_token_add_organizations=true`,
+and `codex_cli_simplified_flow=true`. The code exchange SHALL post form data:
+`grant_type=authorization_code`, `code`, `redirect_uri`, `client_id`, `code_verifier`. Refresh
+SHALL post JSON: `client_id`, `grant_type=refresh_token`, `refresh_token`.
+
+Device-code login, when enabled, SHALL request `{issuer}/api/accounts/deviceauth/usercode`,
+display `{issuer}/codex/device` plus the user code, poll
+`{issuer}/api/accounts/deviceauth/token`, and then exchange the returned authorization code using
+`redirect_uri={issuer}/deviceauth/callback`.
+
 ## Environment variables
 
 | Variable | Effect |
@@ -85,6 +128,8 @@ or printed by `echo config show`.
 | `ECHO_MODEL` | overrides `default_model` (used when no explicit model is given) |
 | `ECHO_CONFIG` | alternate config file path |
 | `NO_COLOR` | disable ANSI output |
+| `ECHO_OPENAI_CHATGPT_ISSUER` | override the ChatGPT OAuth issuer for tests/custom deployments |
+| `ECHO_OPENAI_CHATGPT_CLIENT_ID` | override the ChatGPT OAuth client id for tests/custom deployments |
 
 Environment values take precedence over the config file.
 

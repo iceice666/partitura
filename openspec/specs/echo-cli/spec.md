@@ -1,4 +1,13 @@
-## ADDED Requirements
+# echo-cli
+
+## Purpose
+
+The `echo` CLI is a thin wrapper over the `echo` library crate. It provides a one-shot
+`run` command that reads a `Context` JSON document on stdin and streams `score.echo-event/v1`
+JSONL to stdout, and an ephemeral `repl` command for interactive testing. Auth management
+(`login`/`logout`/`providers`) and configuration inspection (`config show`) are also exposed.
+
+## Requirements
 
 ### Requirement: One-shot `run` streams the event union as JSONL
 
@@ -68,9 +77,21 @@ logout <provider>` SHALL clear the stored token; `echo providers` SHALL list con
 and whether credentials currently resolve for each. The token store and resolution model are
 governed by `echo-config` and `echo-providers`; this capability owns the command surface.
 
+For `openai-chatgpt`, `echo login openai-chatgpt` SHALL use the Codex-compatible ChatGPT OAuth
+browser loopback flow: issuer `https://auth.openai.com`, public client id
+`app_EMoamEEZ73f0CkXaXp7hrann`, callback `http://localhost:1455/auth/callback` with fallback port
+`1457`, PKCE `S256`, and scope
+`openid profile email offline_access api.connectors.read api.connectors.invoke`. It SHALL store
+`idToken`, `accessToken`, `refreshToken`, `expiresAt`, and `lastRefresh` in the token store with
+`chmod 600`. Issuer and client id MAY be overridden for tests/custom deployments.
+
 #### Scenario: login then providers reports resolved
 - **WHEN** a user runs `echo login openai-chatgpt` and completes the OAuth flow, then runs `echo providers`
 - **THEN** the token is stored and `echo providers` reports `openai-chatgpt` as having credentials that resolve
+
+#### Scenario: ChatGPT OAuth callback stores full token set
+- **WHEN** the `openai-chatgpt` OAuth callback receives a valid authorization code and state
+- **THEN** echo exchanges the code with the PKCE verifier and stores the returned ID, access, and refresh tokens with private file permissions
 
 #### Scenario: logout clears the token
 - **WHEN** a user runs `echo logout openai-chatgpt`

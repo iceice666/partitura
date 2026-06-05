@@ -119,6 +119,37 @@ start if `config.toml` or any token file is world-readable, and reports the perm
 _Alternative rejected:_ an OS keychain — platform-specific, and the spec + `CONTRACT.md` pin a file
 path that sops-nix and operators reference.
 
+For `OpenAiChatGpt`, v1 uses the Codex-compatible ChatGPT OAuth flow documented at the command
+surface by the official Codex docs and made concrete by the official `openai/codex` Rust source.
+This is not the metered OpenAI Platform API-key path. Echo mirrors the Codex OAuth parameters so
+the implementation is inspectable rather than guessed:
+
+- issuer: `https://auth.openai.com` (overridable for tests/custom deployments)
+- public client id: `app_EMoamEEZ73f0CkXaXp7hrann` (overridable for tests/custom deployments)
+- browser callback: `http://localhost:1455/auth/callback`, falling back to port `1457`
+- authorize endpoint: `{issuer}/oauth/authorize`
+- token/refresh endpoint: `{issuer}/oauth/token`
+- revoke endpoint: `{issuer}/oauth/revoke`
+- authorize scope: `openid profile email offline_access api.connectors.read api.connectors.invoke`
+- authorize extras: `id_token_add_organizations=true`,
+  `codex_cli_simplified_flow=true`, a random `state`, and PKCE `S256`
+
+The authorization-code exchange posts `application/x-www-form-urlencoded` with
+`grant_type=authorization_code`, `code`, `redirect_uri`, `client_id`, and `code_verifier`. Refresh
+posts JSON with `client_id`, `grant_type=refresh_token`, and `refresh_token`. Echo stores
+`id_token`, `access_token`, `refresh_token`, parsed/derived `expires_at`, and `last_refresh`; the
+ID token is retained because Codex uses JWT claims for account/plan/workspace metadata and because
+the token-exchange path may need it. `logout` removes the local token and may best-effort revoke
+the refresh token; revoke failure must not leave the local logout incomplete.
+
+The browser login is the primary CLI path. Device-code login is a supported fallback for headless
+machines: request `{issuer}/api/accounts/deviceauth/usercode`, display `{issuer}/codex/device` and
+the user code, poll `{issuer}/api/accounts/deviceauth/token`, then exchange the returned
+authorization code through `{issuer}/oauth/token` using `redirect_uri={issuer}/deviceauth/callback`
+and the returned PKCE verifier/challenge. This fallback is optional for the first pass if the
+browser loopback flow is implemented and covered, but the design records the endpoint shape so it
+can be added without another investigation.
+
 ### 9. Secrets are structurally un-loggable; redaction is a type property
 
 Credential material is held in a `Secret` newtype whose `Debug`/`Display` redact, so it cannot

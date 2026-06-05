@@ -1,0 +1,56 @@
+[
+  {
+    "id": "claude-opus-4-8",
+    "name": "Claude Opus 4.8",
+    "api": "anthropic-messages",
+    "provider": "anthropic",
+    "baseUrl": "https://api.anthropic.com",
+    "reasoning": true,
+    "thinkingLevels": ["off", "low", "medium", "high"],
+    "inputModalities": ["text", "image"],
+    "cost": {
+      "input": 0.000015,
+      "output": 0.000075,
+      "cacheRead": 0.0000015,
+      "cacheWrite": 0.00001875
+    },
+    "contextWindow": 200000,
+    "maxTokens": 8192
+  },
+  {
+    "id": "gpt-5",
+    "name": "GPT-5",
+    "api": "openai-responses",
+    "provider": "openai",
+    "baseUrl": "https://api.openai.com",
+    "reasoning": true,
+    "thinkingLevels": ["off", "minimal", "low", "medium", "high", "xhigh"],
+    "inputModalities": ["text", "image"],
+    "cost": {
+      "input": 0.00000125,
+      "output": 0.00001,
+      "cacheRead": 0.000000125,
+      "cacheWrite": 0.00000125
+    },
+    "contextWindow": 400000,
+    "maxTokens": 128000
+  },
+  {
+    "id": "gpt-5-codex",
+    "name": "GPT-5 Codex",
+    "api": "openai-codex-responses",
+    "provider": "openai-chatgpt",
+    "baseUrl": "https://api.openai.com",
+    "reasoning": true,
+    "thinkingLevels": ["off", "medium", "high"],
+    "inputModalities": ["text", "image"],
+    "cost": {
+      "input": 0.0,
+      "output": 0.0,
+      "cacheRead": 0.0,
+      "cacheWrite": 0.0
+    },
+    "contextWindow": 400000,
+    "maxTokens": 128000
+  }
+]

@@ -100,8 +100,18 @@ Everything below "Deferred" is out of scope until specced.
 - Uses an OpenAI **OAuth** token (the Codex/ChatGPT-subscription path) rather than a metered API
   key, so a ChatGPT Plus/Pro subscription can drive requests. Auth coupling into the wire is why
   this is its own `Api`, not `OpenAI` with a different key.
-- Auth: an OAuth flow that obtains and refreshes a token, stored in echo's local token store (see
-  `config.md`). `echo login openai-chatgpt` performs the flow; `echo logout openai-chatgpt` clears it.
+- Auth: a Codex-compatible ChatGPT OAuth flow that obtains and refreshes `id_token`,
+  `access_token`, and `refresh_token`, stored in echo's local token store (see `config.md`).
+  `echo login openai-chatgpt` performs the browser loopback flow; `echo logout openai-chatgpt`
+  clears the local token and may best-effort revoke it. The default issuer is
+  `https://auth.openai.com`, the default public client id is
+  `app_EMoamEEZ73f0CkXaXp7hrann`, and the default callback is
+  `http://localhost:1455/auth/callback` with fallback port `1457`.
+- The authorization request uses PKCE `S256`, scope
+  `openid profile email offline_access api.connectors.read api.connectors.invoke`,
+  `id_token_add_organizations=true`, `codex_cli_simplified_flow=true`, and a random `state`.
+  The token exchange posts form data to `{issuer}/oauth/token`; refresh posts JSON
+  `{client_id, grant_type: "refresh_token", refresh_token}` to the same endpoint.
 - Wire API: OpenAI Responses (Codex variant), same event mapping as `openai-responses`.
 
 ---
