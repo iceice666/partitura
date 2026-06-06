@@ -28,7 +28,7 @@ Sections (all read from Harmony, none edited in-place except via explicit action
 4. **Blockers** — `blocked_by` list with their current status
 5. **Runs** — chronological list of past runs; click to open run report
 6. **Actions** — context-sensitive buttons:
-   - `Dispatch` (when status is `ready` and a CLI agent is available)
+   - `Dispatch` (when status is `ready` and at least one role is available)
    - `Approve` / `Reject with notes` (when status is `reviewing`)
    - `Move to Ready` (when status is `specced` and spec field is present)
    - `Mark Blocked` / `Unblock` (always)
@@ -38,47 +38,60 @@ Sections (all read from Harmony, none edited in-place except via explicit action
 Opened from the Runs list in ticket detail. Renders the structured run report written by Voice.
 
 Sections:
-1. **Summary** — exit reason, CLI used, duration, token usage
+1. **Summary** — exit reason, role used, model used, duration, token usage
 2. **Files changed** — diff summary (file list + line counts)
 3. **Acceptance checks** — each item in `spec.acceptance.automated` with pass/fail
 4. **Evidence** — links to any files written to `.score/runs/<ticket-id>/<run-id>/`
 5. **Agent notes** — free-text from the run report's `notes` field
 6. **Raw log** (collapsed by default) — line-by-line Voice output stream
 
-## Runtimes inventory panel
+## Providers / Roles panel
 
-Accessible from a toolbar icon or menu. Shows detected CLI agents on this machine.
+Accessible from a toolbar icon or menu. Shows the provider credential status and available
+roles as reported by Harmony via `runtimes:snapshot`. Aria only renders; Harmony owns the data.
 
 ```
- Local Machine — Brian's MacBook Pro
+ Providers
  ─────────────────────────────────────────────────────
- ✓  claude           Claude Code 1.3.2    anthropic
- ✓  codex            OpenAI Codex CLI     openai
- ✗  gemini           not found            —
+ ✓  anthropic        claude-opus-4-8, claude-sonnet-4-7
+ ✓  openai           gpt-4o, o3
+ ✗  google           no credentials configured
  ─────────────────────────────────────────────────────
- Harmony  localhost:4242  connected
+ Roles
+ ─────────────────────────────────────────────────────
+    builder          anthropic / claude-opus-4-8
+    planner          anthropic / claude-sonnet-4-7
+    reviewer         anthropic / claude-sonnet-4-7
+ ─────────────────────────────────────────────────────
 ```
 
-Detection is done by Harmony (it probes `PATH`); Aria only renders the report.
-
-> **Reframe pending.** Agents are now **roles** backed by `echo` providers/models, not detected
-> CLI binaries. This panel becomes a *providers / models* view (which providers have credentials,
-> which models are available) and the picker selects a **role** (+ optional model). The mockups
-> in this file still show the old CLI-detection framing; full reshape is a follow-up — see the
-> deferred note in `../../CONTRACT.md`.
+Roles whose provider has no credentials are shown greyed out and cannot be dispatched.
 
 ## Assignee picker
 
 Appears in the ticket detail header and the new-ticket form. Lists:
 
 - `@me` — you, identified by `~/.score/config.yaml: operator`
-- `@<agent>` — one entry per runtime detected by Harmony (e.g. `@claude`, `@codex`)
+- `@<role>` — one entry per role in Harmony's catalog (e.g. `@builder`, `@planner`, `@reviewer`),
+  showing its resolved provider/model as a subtitle
 
-Selecting `@<agent>` and clicking Dispatch triggers `run:dispatch` to Harmony.
+```
+  @me
+  @builder   anthropic / claude-opus-4-8    [▾]
+  @planner   anthropic / claude-sonnet-4-7  [▾]
+  @reviewer  anthropic / claude-sonnet-4-7  [▾]
+```
+
+`[▾]` expands inline to a model selector listing models from credentialed providers. Selecting
+one sets the `model?` override sent in `run:dispatch`. Leaving it collapsed uses Harmony's
+resolved default for that role.
+
+Roles whose provider has no credentials are shown greyed out and cannot be selected for dispatch.
+
 Selecting `@me` marks the ticket as human-assigned (no agent dispatch).
 
-The picker grammar is uniform — adding a human team member later requires no UX change to
-the picker; only Harmony's config gains a new entry.
+The picker grammar is uniform — adding a new role to Harmony's catalog appears here
+automatically with no UX change required.
 
 ## Navigation and layout
 
@@ -90,8 +103,8 @@ the picker; only Harmony's config gains a new entry.
 │    harmony         [warm]  │                                               │
 │                            │                                               │
 │  ─────────────────         │                                               │
-│  Runtimes inventory        │                                               │
-│  ✓ claude  ✓ codex         │                                               │
+│  Providers / Roles         │                                               │
+│  ✓ anthropic  ✓ openai     │                                               │
 │                            │                                               │
 │  Harmony: connected        │                                               │
 └────────────────────────────┴───────────────────────────────────────────────┘

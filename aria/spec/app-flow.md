@@ -26,7 +26,8 @@ type alias Model =
   , activeProject : Maybe ProjectId
   , board         : Dict ColumnId (List Ticket)
   , selection     : Selection
-  , runtimes      : List Runtime
+  , providers     : List Provider
+  , roles         : List Role
   , pendingOps    : Set TicketId    -- tickets with an in-flight Harmony request
   }
 ```
@@ -48,6 +49,7 @@ type Msg
 
   -- Harmony → UI (server push)
   | ProjectsReceived (List Project)
+  | RuntimesReceived (List Provider) (List Role)
   | TicketChanged Ticket
   | RunStarted Run
   | RunProgress RunId String        -- incremental log chunk
@@ -58,7 +60,7 @@ type Msg
   | SelectProject ProjectId
   | SelectTicket TicketId
   | SelectRun RunId
-  | DispatchRun TicketId AgentId
+  | DispatchRun TicketId RoleId (Maybe ModelId)
   | CancelRun RunId
   | MoveTicket TicketId ColumnId
   | MarkBlocked TicketId String     -- reason string
@@ -101,6 +103,10 @@ update (ProjectsReceived projects) model =
   ( { model | projects = projects }
   , Cmd.none )
 
+update (RuntimesReceived providers roles) model =
+  ( { model | providers = providers, roles = roles }
+  , Cmd.none )
+
 update (TicketChanged ticket) model =
   ( { model
         | board      = upsertTicket ticket model.board
@@ -117,9 +123,9 @@ update (WipWarning colId limit) model =
   , Cmd.none )
 
 -- User intent
-update (DispatchRun ticketId agentId) model =
+update (DispatchRun ticketId roleId maybeModelId) model =
   ( { model | pendingOps = Set.insert ticketId model.pendingOps }
-  , Cmd.push "run:dispatch" { ticketId = ticketId, agentId = agentId } )
+  , Cmd.push "run:dispatch" { ticketId = ticketId, role = roleId, model = maybeModelId } )
 
 update (MoveTicket ticketId colId) model =
   ( { model | pendingOps = Set.insert ticketId model.pendingOps }
@@ -148,8 +154,8 @@ update (SelectProject id) model =
 
 2. HarmonyConnected
       → join projects:lobby
-      → server pushes ProjectsReceived
-      → sidebar renders project list
+      → server pushes ProjectsReceived + RuntimesReceived
+      → sidebar renders project list; providers/roles panel populated
 
 3. User clicks project (SelectProject id)
       → join project:<id>

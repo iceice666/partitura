@@ -8,7 +8,8 @@ Use **Phoenix Channels** over WebSocket. Harmony is Elixir — Phoenix is the na
 gives us real-time push (server→client) without polling. Aria connects to
 `ws://localhost:4242/socket` using the Phoenix channel protocol.
 
-This is the recommended starting point. The alternatives are noted at the end of this file.
+Aria is the only client for the foreseeable future, so portability to other wire protocols
+is not a constraint. This decision is final.
 
 ## Channel layout
 
@@ -31,7 +32,8 @@ Defined in [`CONTRACT.md`](../../CONTRACT.md). Reproduced here with Aria-specifi
 | `ticket:list` | `project:<id>` | Sent on channel join; reply is full snapshot |
 | `ticket:create` | `project:<id>` | Payload: partial ticket map (Harmony assigns id if absent) |
 | `ticket:update` | `project:<id>` | Payload: `{ id, patch }` — patch is merged into the ticket |
-| `run:dispatch` | `project:<id>` | Payload: `{ ticket_id, cli }` — triggers Voice spawn |
+| `run:dispatch` | `project:<id>` | Payload: `{ ticket_id, role, model? }` — triggers Voice spawn; `model` overrides Harmony's resolved default |
+| `runtimes:snapshot` | `projects:lobby` | Request a fresh provider/role snapshot from Harmony |
 | `run:cancel` | `project:<id>` | Payload: `{ run_id }` — sends SIGTERM to the Voice subprocess |
 
 ### Server → Client
@@ -44,6 +46,7 @@ Defined in [`CONTRACT.md`](../../CONTRACT.md). Reproduced here with Aria-specifi
 | `run:finished` | `project:<id>` | Voice exited; payload is the run report summary |
 | `wip:warning` | `project:<id>` | WIP limit approaching (soft cap) |
 | `inbox:blocked` | `project:<id>` | Hard inbox cap reached — dispatching is blocked |
+| `runtimes:snapshot` | `projects:lobby` | Pushed on join and whenever provider credentials or role catalog changes; payload: `{ providers: [...], roles: [...] }` |
 
 ## Connection management
 
@@ -58,14 +61,3 @@ Defined in [`CONTRACT.md`](../../CONTRACT.md). Reproduced here with Aria-specifi
 Aria keeps an in-memory mirror of the last received ticket map per project. On reconnect it
 re-joins the channel and receives a fresh snapshot — no local persistence needed.
 
-## Alternatives (deferred)
-
-These are noted for when Phoenix Channels is reconsidered:
-
-| Option | Trade-offs |
-|--------|-----------|
-| **JSON-RPC 2.0 over WebSocket** | More portable; no Phoenix dep in clients; simpler to implement a third client (e.g. CLI) |
-| **gRPC + bidirectional streaming** | Strong typing via protobuf; better for team/multi-machine; more infra |
-| **HTTP polling** | Simple; no real-time push; not suitable for run:progress events |
-
-Resolve this before writing the first line of Aria implementation code.

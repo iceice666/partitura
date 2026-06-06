@@ -93,7 +93,7 @@ HarmonyWorker (AsyncComponent)
 Message flow (outbound):
 ```
 user clicks Dispatch
-  → AppMsg::DispatchRun(ticket_id, agent_id)
+  → AppMsg::DispatchRun(ticket_id, role_id, model_id?)
   → AppComponent::update() marks pendingOps, sends HarmonyWorkerMsg
   → HarmonyWorker pushes run:dispatch over WebSocket
   → server push ticket:changed / run:started comes back
@@ -119,7 +119,7 @@ aria/linux/
       card.rs             — CardModel (FactoryElement)
       ticket_detail.rs
       run_report.rs
-      runtimes.rs
+      providers_roles.rs
     workers/
       harmony.rs          — AsyncComponent: Phoenix Channels WebSocket
     types/
