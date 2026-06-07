@@ -2,7 +2,6 @@
 
 ## Purpose
 Define Aria's ephemeral toast notifications for run outcomes, background projects, maintenance projects, and daemon lifecycle events.
-
 ## Requirements
 ### Requirement: Ephemeral toast notifications
 Aria SHALL display ephemeral toast notifications in the bottom-right corner of the window for events that warrant user attention. Toasts are transient; they disappear after a short timeout or when dismissed by the user. Toasts fire regardless of which project is currently selected on the board.
@@ -47,3 +46,25 @@ Aria SHALL show a toast when the daemon connection is established or lost (see `
 #### Scenario: Toast on disconnect
 - **WHEN** Aria loses connection to the active daemon
 - **THEN** a toast "Disconnected from <daemon-name>" appears
+
+### Requirement: macOS toast stack layout
+Aria SHALL render toast notifications in a bottom-right stack with at most four visible toasts, 320 pt width, regular material background, 8 pt radius, 12 pt padding, and slide-out removal for older toasts.
+
+#### Scenario: Fifth toast removes oldest visible toast
+- **WHEN** a fifth toast is added while four toasts are visible
+- **THEN** the oldest visible toast slides out and the new toast appears in the stack
+
+### Requirement: Run-finished toast actions
+Run-finished toasts SHALL show a status icon, title, body, dismiss control, failure styling with a red leading stripe when applicable, and a View report action that opens the inspector and scrolls to the relevant run entry.
+
+#### Scenario: View report opens run entry
+- **WHEN** the user clicks View report on a run-finished toast
+- **THEN** Aria opens the ticket inspector and reveals the matching run entry
+
+### Requirement: Toast dismiss timing
+General toasts SHALL auto-dismiss after 5 seconds and daemon connect/disconnect toasts SHALL auto-dismiss after 3 seconds unless dismissed manually.
+
+#### Scenario: Daemon toast expires quickly
+- **WHEN** a daemon connection toast is shown and the user does not interact
+- **THEN** Aria removes the toast after 3 seconds
+
